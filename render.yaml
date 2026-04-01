@@ -1,0 +1,70 @@
+services:
+  # The Laravel Web App
+  - type: web
+    name: placement-test-backend
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerCommand: "./scripts/start.sh"
+    plan: starter
+    region: ohio
+    envVars:
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        value: "https://placement-test-backend.onrender.com"
+      - key: FRONTEND_URL
+        sync: false
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DATABASE_URL
+        fromDatabase:
+          name: placement-test-db
+          property: connectionString
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: GEMINI_API_KEY
+        sync: false
+
+  # The Background Queue Worker (For Async AI processing)
+  - type: worker
+    name: placement-test-worker
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerCommand: "php artisan queue:work --sleep=3 --tries=3 --timeout=120"
+    plan: starter
+    region: ohio
+    envVars:
+      - key: APP_KEY
+        fromService:
+          type: web
+          name: placement-test-backend
+          envVarKey: APP_KEY
+      - key: APP_ENV
+        value: production
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DATABASE_URL
+        fromDatabase:
+          name: placement-test-db
+          property: connectionString
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: GEMINI_API_KEY
+        fromService:
+          type: web
+          name: placement-test-backend
+          envVarKey: GEMINI_API_KEY
+
+databases:
+  # Native Managed PostgreSQL
+  - name: placement-test-db
+    databaseName: placement_test
+    user: m2
+    plan: starter
+    region: ohio
