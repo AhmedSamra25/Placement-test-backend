@@ -1,0 +1,40 @@
+# koyeb.yaml - Deployment blueprint for Koyeb Free Tier
+name: placement-test-platform
+
+services:
+  - name: backend-api
+    type: WEB
+    image: github.com/AhmedSamra25/Placement-test-backend
+    dockerfile: Dockerfile
+    instance_type: nano # Free tier (512MB RAM)
+    regions:
+      - fra # Frankfurt is usually fastest for free tier
+    ports:
+      - port: 80
+        protocol: http
+    routes:
+      - path: /
+        port: 80
+    env:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_PORT
+        value: "80"
+      - key: APP_URL
+        value: "https://placement-test-platform.koyeb.app" # Default Koyeb subdomain
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DATABASE_URL
+        value: "" # REQUIRED: Paste your Neon.tech DB URL here
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: FRONTEND_URL
+        value: "" # REQUIRED: Paste your frontend live URL
+      - key: GEMINI_API_KEY
+        value: "" # REQUIRED: Paste your Gemini Key
+      - key: APP_KEY
+        value: "" # RECOMMENDED: Generate one using 'php artisan key:generate'
