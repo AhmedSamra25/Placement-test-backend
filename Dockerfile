@@ -1,5 +1,5 @@
-# Use PHP 8.2 as base with Apache
-FROM php:8.2-apache
+# Use PHP 8.4 as base with Apache
+FROM php:8.4-apache
 
 # Install required system packages and PHP extensions
 RUN apt-get update && apt-get install -y \
