@@ -125,7 +125,7 @@ class StudentController extends Controller
         // For standard placement testing, we pass the email and org_id or just use the student id in a signed URL
         // However, the test taker API uses: /api/test/register
         // The frontend link might look like: https://app.speakinggenie.com/take-test?email=...
-        $frontendUrl = config('app.url') . '/take-test';
+        $frontendUrl = config('app.url') . '/test';
         $inviteLink = $frontendUrl . '?email=' . urlencode($student->email) . '&org_id=' . $student->org_id;
 
         Mail::to($student->email)->send(new StudentInviteMail($student, $inviteLink));
