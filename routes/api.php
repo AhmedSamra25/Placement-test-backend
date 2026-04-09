@@ -68,12 +68,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 // ─── Test-Taker API (student flow) ───────────────────────────────────────────
 Route::prefix('test')->group(function () {
-    Route::post('register', [\App\Http\Controllers\Api\TestSessionController::class, 'register']);
+    // org.access middleware validates that the org_id in the request body
+    // matches a real organization, providing an extra guard on the register step.
+    Route::post('register', [\App\Http\Controllers\Api\TestSessionController::class, 'register'])
+        ->middleware('org.access');
 
     Route::middleware(['auth:sanctum'])->group(function () {
-        Route::get('session', [\App\Http\Controllers\Api\TestSessionController::class, 'session']);
+        Route::post('start',        [\App\Http\Controllers\Api\TestSessionController::class, 'start']);
+        Route::get('session',       [\App\Http\Controllers\Api\TestSessionController::class, 'session']);
         Route::post('save-section', [\App\Http\Controllers\Api\TestSessionController::class, 'saveSection']);
         Route::post('upload-media', [\App\Http\Controllers\Api\MediaUploadController::class, 'upload']);
-        Route::post('submit', [\App\Http\Controllers\Api\TestSessionController::class, 'submit']);
+        Route::post('submit',       [\App\Http\Controllers\Api\TestSessionController::class, 'submit']);
     });
 });

@@ -24,18 +24,18 @@ class DashboardController extends Controller
         $user = $request->user();
         $orgId = $user->org_id;
 
-        // Fetch students scoped to this org
-        $students = Student::where('org_id', $orgId)->get();
+        // Use targeted DB queries instead of loading all students into PHP memory
+        $totalStudents     = Student::where('org_id', $orgId)->count();
+        $completedStudents = Student::where('org_id', $orgId)->where('status', 'completed')->count();
 
-        $totalStudents = $students->count();
-        $completedStudents = $students->where('status', 'completed')->count();
-
-        $completionRate = $totalStudents > 0 
-            ? round(($completedStudents / $totalStudents) * 100, 1) 
+        $completionRate = $totalStudents > 0
+            ? round(($completedStudents / $totalStudents) * 100, 1)
             : 0;
 
-        $averageScore = $students->whereNotNull('overall_score')->avg('overall_score') ?? 0;
-        $averageScore = round((float) $averageScore, 2);
+        $averageScore = round(
+            (float) (Student::where('org_id', $orgId)->whereNotNull('overall_score')->avg('overall_score') ?? 0),
+            2
+        );
 
         $org = $user->organization;
 

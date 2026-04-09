@@ -91,7 +91,7 @@ class OrgSettingsController extends Controller
         $validated = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
             'role'     => ['required', Rule::in(['admin', 'moderator'])],
             'status'   => ['required', Rule::in(['active', 'inactive'])],
         ]);

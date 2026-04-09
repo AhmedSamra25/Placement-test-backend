@@ -25,8 +25,11 @@ class StudentController extends Controller
         $query = Student::where('org_id', $user->org_id)
             ->with('testSubmission');
 
-        // Filter by status (pending, in_progress, completed)
+        // Filter by status — validate against the allowed enum values first
         if ($request->filled('status')) {
+            $request->validate([
+                'status' => ['required', Rule::in(['pending', 'accepted', 'in_progress', 'completed'])],
+            ]);
             $query->where('status', $request->input('status'));
         }
 
@@ -122,12 +125,12 @@ class StudentController extends Controller
      */
     private function sendInviteEmail(Student $student): void
     {
-        // For standard placement testing, we pass the email and org_id or just use the student id in a signed URL
-        // However, the test taker API uses: /api/test/register
-        // The frontend link might look like: https://app.speakinggenie.com/take-test?email=...
-        $frontendUrl = config('app.url') . '/test';
-        $inviteLink = $frontendUrl . '?email=' . urlencode($student->email) . '&org_id=' . $student->org_id;
+        // Uses FRONTEND_URL from .env so the link points to the student-facing app,
+        // not the Laravel API server.
+        $inviteLink = rtrim(config('app.frontend_url'), '/') . '/take-test'
+            . '?email=' . urlencode($student->email)
+            . '&org_id=' . $student->org_id;
 
-        Mail::to($student->email)->send(new StudentInviteMail($student, $inviteLink));
+        Mail::to($student->email)->queue(new StudentInviteMail($student, $inviteLink));
     }
 }

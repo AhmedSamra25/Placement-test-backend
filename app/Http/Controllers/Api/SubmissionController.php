@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\CefrLevel;
 use App\Models\TestSubmission;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,24 +27,8 @@ class SubmissionController extends Controller
             return response()->json(['message' => 'Not found.'], 404);
         }
 
-        // 2. Fetch the CEFR mapping rules for the org
+        // 2. Fetch the CEFR mapping rules for the org (ordered for correct range lookup)
         $cefrLevels = $user->organization->cefrLevels()->orderBy('score_min')->get();
-
-        // 3. Helper to map a numeric score to a CEFR level object
-        $mapScore = function ($score) use ($cefrLevels) {
-            if ($score === null) return null;
-            
-            $match = $cefrLevels->first(function ($level) use ($score) {
-                return $score >= $level->score_min && $score <= $level->score_max;
-            });
-
-            return $match ? [
-                'name'     => $match->name,
-                'cefr_map' => $match->cefr_map,
-                'color'    => $match->color,
-                'goals'    => $match->goals,
-            ] : null;
-        };
 
         $overallScore = $submission->calculateOverallScore();
 
@@ -71,14 +56,14 @@ class SubmissionController extends Controller
             ],
 
             'cefr_bands' => [
-                'reading'       => $mapScore($submission->reading_score),
-                'writing'       => $mapScore($submission->writing_score),
-                'speaking'      => $mapScore($submission->speaking_score),
-                'listening'     => $mapScore($submission->listening_score),
-                'vocabulary'    => $mapScore($submission->vocabulary_score),
-                'grammar'       => $mapScore($submission->grammar_score),
-                'pronunciation' => $mapScore($submission->pronunciation_score),
-                'overall'       => $mapScore($overallScore),
+                'reading'       => CefrLevel::resolveFromScore($submission->reading_score, $cefrLevels),
+                'writing'       => CefrLevel::resolveFromScore($submission->writing_score, $cefrLevels),
+                'speaking'      => CefrLevel::resolveFromScore($submission->speaking_score, $cefrLevels),
+                'listening'     => CefrLevel::resolveFromScore($submission->listening_score, $cefrLevels),
+                'vocabulary'    => CefrLevel::resolveFromScore($submission->vocabulary_score, $cefrLevels),
+                'grammar'       => CefrLevel::resolveFromScore($submission->grammar_score, $cefrLevels),
+                'pronunciation' => CefrLevel::resolveFromScore($submission->pronunciation_score, $cefrLevels),
+                'overall'       => CefrLevel::resolveFromScore($overallScore, $cefrLevels),
             ],
         ]);
     }

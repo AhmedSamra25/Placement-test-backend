@@ -35,9 +35,9 @@ class TestSessionController extends Controller
             return response()->json(['message' => 'This test has already been completed.'], 400);
         }
 
-        // 3. Mark in progress
+        // 3. Mark accepted (User clicked link, but hasn't started timer)
         if ($student->status === 'pending') {
-            $student->update(['status' => 'in_progress', 'test_date' => now()]);
+            $student->update(['status' => 'accepted']);
         }
 
         // 4. Create TestSubmission if it doesn't exist
@@ -54,6 +54,30 @@ class TestSessionController extends Controller
             'token'      => $token,
             'student'    => $student,
             'submission' => $submission,
+        ]);
+    }
+
+    /**
+     * POST /api/test/start
+     * Called when the accepted student clicks "Start Test Now"
+     */
+    public function start(Request $request): JsonResponse
+    {
+        /** @var \App\Models\Student $student */
+        $student = $request->user();
+
+        if ($student->status !== 'accepted') {
+            return response()->json(['message' => 'Test cannot be started. Invalid status.'], 400);
+        }
+
+        $student->update([
+            'status' => 'in_progress',
+            'test_date' => now()
+        ]);
+
+        return response()->json([
+            'message' => 'Test started successfully.',
+            'student' => $student,
         ]);
     }
 
