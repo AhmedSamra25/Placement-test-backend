@@ -88,6 +88,7 @@ class StudentController extends Controller
         // Increment org license used tracking
         $org->increment('license_used');
 
+        \Illuminate\Support\Facades\Log::info("Inviting student: " . $student->email);
         $this->sendInviteEmail($student);
 
         return response()->json([
@@ -113,6 +114,7 @@ class StudentController extends Controller
             return response()->json(['message' => 'Test already started or completed.'], 400);
         }
 
+        \Illuminate\Support\Facades\Log::info("Resending invite to: " . $student->email);
         $this->sendInviteEmail($student);
 
         return response()->json([
@@ -131,6 +133,6 @@ class StudentController extends Controller
             . '?email=' . urlencode($student->email)
             . '&org_id=' . $student->org_id;
 
-        Mail::to($student->email)->queue(new StudentInviteMail($student, $inviteLink));
+        Mail::to($student->email)->send(new StudentInviteMail($student, $inviteLink));
     }
 }
